@@ -1,5 +1,3 @@
-import java.util.Arrays;
-import java.util.BitSet;
 
 public class HashTable<K,V> {
 
@@ -61,6 +59,29 @@ public class HashTable<K,V> {
 
         //The key is not actually in the KV store and the hash we found above was indeed a collision
         return null;
+    }
+
+    public boolean rm(K key) {
+        int hashPosInIndex = lookupIndex(index,key.hashCode());
+        if (hashPosInIndex == -1) return false;
+
+        int kvPosForHash = index[hashPosInIndex+1] - 1;
+        //noinspection unchecked
+        K k = (K) kvStore[kvPosForHash];
+        //noinspection unchecked
+        V v = (V) kvStore[kvPosForHash+1];
+
+        if (key == k || key.equals(k)) {
+            removeKvStore(kvPosForHash);
+            removeIndex(index, hashPosInIndex);
+            return true;
+        }
+        return false;
+    }
+
+    private void removeKvStore(int kvPosForHash) {
+        kvStore[kvPosForHash] = null;
+        kvStore[kvPosForHash+1] = null;
     }
 
     private int getKvPosForHash(int hash) {
@@ -135,7 +156,7 @@ public class HashTable<K,V> {
                 if (index[pos] == hashCode) break;
             }
 
-            //If the slot was deleted or it has a different hash from the one we're looking for, keep going
+            //If the slot was deleted or if it has a different hash from the one we're looking for, keep going
             pos = (pos+2) % index.length;
             slotEmpty = index[pos+1] == INDEX_SLOT_EMPTY;
             slotDeleted = index[pos+1] == INDEX_SLOT_DELETED;
@@ -147,7 +168,12 @@ public class HashTable<K,V> {
             index[firstDeletedSlot] = hashCode;
             index[firstDeletedSlot+1] = index[pos+1];
             index[pos+1] = INDEX_SLOT_DELETED;
+            return firstDeletedSlot; //which now contains the element
         }
         return pos;
+    }
+
+    private static void removeIndex(int[] index, int hashPosInIndex) {
+        index[hashPosInIndex+1] = INDEX_SLOT_DELETED;
     }
 }
