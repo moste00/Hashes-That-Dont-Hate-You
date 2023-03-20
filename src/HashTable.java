@@ -33,12 +33,22 @@ public class HashTable<K,V> {
     }
 
     public V get(K key) {
-        int indexPos = lookupIndex(key.hashCode());
-        if (indexPos == -1) return null;
+        int hashPosInIndex = lookupIndex(key.hashCode());
+        if (hashPosInIndex == -1) return null;
 
-        int i = index[indexPos+1];
+        int i = index[hashPosInIndex+1];
         //noinspection unchecked
-        return (V) kvStore[i+1]; //it's okay, we know for a fact that it's of type V, the set method is type-safe
+        K k = (K) kvStore[i];   //no worries
+        //noinspection unchecked
+        V v = (V) kvStore[i+1]; //it's okay, we know for a fact that it's of type V, the set method is type-safe
+        
+        //fast identity check, implies equality but avoids a potentially slow .equal() call
+        if (k == key) return v;
+        //identity not equal, still possible for equality to hold
+        if (key.equals(k)) return v;
+
+        //The key is not actually in the KV store and the hash we found above was a collision
+        return null;
     }
 
     private void insertKvStore(Object k, Object v) {
