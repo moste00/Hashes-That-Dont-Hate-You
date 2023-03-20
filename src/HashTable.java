@@ -41,7 +41,7 @@ public class HashTable<K,V> {
         K k = (K) kvStore[i];   //no worries
         //noinspection unchecked
         V v = (V) kvStore[i+1]; //it's okay, we know for a fact that it's of type V, the set method is type-safe
-        
+
         //fast identity check, implies equality but avoids a potentially slow .equal() call
         if (k == key) return v;
         //identity not equal, still possible for equality to hold
